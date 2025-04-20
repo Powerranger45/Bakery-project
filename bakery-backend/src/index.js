@@ -3,7 +3,6 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 
-const authRoutes = require('./routes/authRoutes');
 const bakeryRoutes = require('./routes/index');
 
 // Initialize Express app
@@ -15,7 +14,6 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Register routes first
-app.use('/api/auth', authRoutes);  // Authentication routes
 app.use('/api', bakeryRoutes);     // Other routes (products, orders, etc.)
 
 // Health check endpoint

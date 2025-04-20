@@ -3,141 +3,129 @@ const amqp = require('amqplib');
 
 let channel;
 
-// Connect to RabbitMQ
+// RabbitMQ connection
 async function connectRabbitMQ() {
   try {
     const connection = await amqp.connect(process.env.RABBITMQ_URL);
     channel = await connection.createChannel();
-    await channel.assertQueue('orders', { durable: true });
+    await channel.assertQueue('order-processing', { durable: true });
     console.log('Connected to RabbitMQ');
   } catch (error) {
-    console.error('Error connecting to RabbitMQ:', error);
-    // Retry connection after 5 seconds
+    console.error('RabbitMQ connection failed:', error);
     setTimeout(connectRabbitMQ, 5000);
   }
 }
-
-// Connect to RabbitMQ when service is initialized
 connectRabbitMQ();
 
 const bakeryService = {
-  // Products
+  // Product operations (PUBLIC)
   async getAllProducts() {
     return prisma.product.findMany();
   },
 
   async getProductById(id) {
-    return prisma.product.findUnique({
-      where: { id: Number(id) },
-    });
+    return prisma.product.findUnique({ where: { id: Number(id) } });
   },
 
+  // Admin-only product operations
   async createProduct(data) {
-    return prisma.product.create({
-      data,
+    return prisma.product.create({ data });
+  },
+
+  // Cart operations
+  async addToCart(userId, productId, quantity = 1) {
+    return prisma.addToCart.upsert({
+      where: { userId_productId: { userId, productId } },
+      update: { quantity: { increment: quantity } },
+      create: { userId, productId, quantity },
+      include: { product: true }
     });
   },
 
-  // Orders
-  async placeOrder(orderData) {
-    const { userId, items } = orderData;
+  async getCart(userId) {
+    return prisma.addToCart.findMany({
+      where: { userId },
+      include: { product: true }
+    });
+  },
 
-    // Calculate the total price
-    let total = 0;
-    const orderItems = [];
+  async updateCartItem(userId, productId, quantity) {
+    return prisma.addToCart.update({
+      where: { userId_productId: { userId, productId } },
+      data: { quantity },
+      include: { product: true }
+    });
+  },
 
-    for (const item of items) {
-      const product = await prisma.product.findUnique({
-        where: { id: Number(item.productId) },
-      });
+  async removeFromCart(userId, productId) {
+    return prisma.addToCart.delete({
+      where: { userId_productId: { userId, productId } }
+    });
+  },
 
-      if (!product) {
-        throw new Error(`Product with ID ${item.productId} not found`);
-      }
+  // Order operations
+  async placeOrder(userId) {
+    const cartItems = await prisma.addToCart.findMany({
+      where: { userId },
+      include: { product: true }
+    });
 
-      total += product.price * item.quantity;
-      orderItems.push({
-        productId: product.id,
-        quantity: item.quantity,
-        price: product.price,
-      });
+    if (cartItems.length === 0) {
+      throw new Error('Cart is empty');
     }
 
-    // Create the order in the database
+    const orderItems = cartItems.map(item => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      price: item.product.price
+    }));
+
+    const total = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
     const order = await prisma.order.create({
       data: {
-        userId: Number(userId),
+        userId,
         total,
-        status: 'PENDING',
-        items: {
-          create: orderItems,
-        },
+        items: { create: orderItems }
       },
-      include: {
-        items: {
-          include: {
-            product: true,
-          },
-        },
-      },
+      include: { items: true }
     });
 
-    // Send the order to RabbitMQ for processing
+    // Send to RabbitMQ
     if (channel) {
       channel.sendToQueue(
-        'orders',
+        'order-processing',
         Buffer.from(JSON.stringify({ orderId: order.id })),
-        {
-          persistent: true,
-        }
+        { persistent: true }
       );
     }
 
+    // Clear cart after order
+    await prisma.addToCart.deleteMany({ where: { userId } });
     return order;
   },
 
   async getOrderStatus(orderId) {
     return prisma.order.findUnique({
       where: { id: Number(orderId) },
-      include: {
-        items: {
-          include: {
-            product: true,
-          },
-        },
-      },
+      include: { items: true }
     });
   },
 
-  async getAllOrders() {
-    return prisma.order.findMany({
-      include: {
-        items: {
-          include: {
-            product: true,
-          },
-        },
-      },
-    });
-  },
-
-  // Users
-  async createUser(userData) {
-    return prisma.user.create({
-      data: userData,
-    });
-  },
-
-  async getUserById(id) {
-    return prisma.user.findUnique({
-      where: { id: Number(id) },
-    });
-  },
+  // User operations
+// User operations
+async createUser(userData) {
+  return prisma.user.create({
+    data: {
+      email: userData.email,
+      password: userData.password,
+      isAdmin: userData.isAdmin || false // Explicitly set default to false
+    }
+  });
+},
 
   async getUserByEmail(email) {
-    return prisma.user.findUnique({
-      where: { email },
-    });
+    return prisma.user.findUnique({ where: { email } });
   }
 };
 
