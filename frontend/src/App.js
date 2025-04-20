@@ -28,6 +28,7 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+
 function App() {
   return (
     <AuthProvider>

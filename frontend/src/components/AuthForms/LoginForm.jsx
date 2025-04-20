@@ -5,6 +5,7 @@ import { AuthContext } from '../../context/AuthContext';
 const LoginForm = () => {
   const [formData, setFormData] = useState({
     email: '',
+    password: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,8 +26,7 @@ const LoginForm = () => {
     setLoading(true);
 
     try {
-      // For simplicity, we're using a simplified login that only requires email
-      await login(formData.email);
+      await login(formData.email, formData.password);
       navigate('/');
     } catch (err) {
       setError('Failed to login. Please try again.');
@@ -54,6 +54,19 @@ const LoginForm = () => {
                     id="email"
                     name="email"
                     value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="password" className="form-label">Password</label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    id="password"
+                    name="password"
+                    value={formData.password}
                     onChange={handleChange}
                     required
                   />

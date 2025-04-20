@@ -5,7 +5,8 @@ import { AuthContext } from '../../context/AuthContext';
 const RegisterForm = () => {
   const [formData, setFormData] = useState({
     name: '',
-    email: ''
+    email: '',
+    password: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -67,6 +68,19 @@ const RegisterForm = () => {
                     id="email"
                     name="email"
                     value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="password" className="form-label">Password</label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    id="password"
+                    name="password"
+                    value={formData.password}
                     onChange={handleChange}
                     required
                   />

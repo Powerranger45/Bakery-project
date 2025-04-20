@@ -81,7 +81,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      REACT_APP_API_URL: http://localhost:3001/api
+      REACT_APP_API_URL: "http://bakery-backend:3001/api"  # Correctly formatted
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:3000"]
       interval: 10s

@@ -1,18 +1,19 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import axios from 'axios';
 
 export const AuthContext = createContext();
 
-// Custom hook to use the auth context
 export const useAuth = () => {
   return useContext(AuthContext);
 };
+
+const API_URL = process.env.REACT_APP_API_URL; // Use env variable
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is stored in localStorage
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
@@ -20,7 +21,29 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = (userData) => {
+  const login = async (email, password) => {
+    const res = await axios.post(`${API_URL}/auth/login`, {
+      email,
+      password
+    });
+
+    const { token, user } = res.data;
+    const userData = { ...user, token };
+
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+  };
+
+  const register = async ({ name, email, password }) => {
+    const res = await axios.post(`${API_URL}/auth/register`, {
+      name,
+      email,
+      password
+    });
+
+    const { token, user } = res.data;
+    const userData = { ...user, token };
+
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
   };
@@ -31,7 +54,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
