@@ -7,57 +7,36 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Product {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  price       Float
-  imageUrl    String?
-  available   Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  orderItems  OrderItem[]
-}
-
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
+  id        Int         @id @default(autoincrement())
+  email     String      @unique
   password  String
-  role      String   @default("customer")
-  name      String?
-  orders    Order[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isAdmin   Boolean     @default(false)
+  cartItems AddToCart[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
 
-model Order {
-  id        Int        @id @default(autoincrement())
-  userId    Int
-  user      User       @relation(fields: [userId], references: [id])
-  status    OrderStatus @default(PENDING)
-  total     Float
-  items     OrderItem[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-}
-
-model OrderItem {
-  id        Int      @id @default(autoincrement())
-  orderId   Int
-  order     Order    @relation(fields: [orderId], references: [id])
-  productId Int
-  product   Product  @relation(fields: [productId], references: [id])
-  quantity  Int
+model Product {
+  id        Int         @id @default(autoincrement())
+  name      String
   price     Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([orderId, productId])
+  stock     Int
+  quantity  Int         @default(0) // Current quantity in stock
+  cartItems AddToCart[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
 
-enum OrderStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  CANCELLED
+model AddToCart {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id])
+  productId Int
+  product   Product   @relation(fields: [productId], references: [id])
+  quantity  Int       @default(1) // Quantity of the product in the cart
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([userId, productId]) // Ensure unique combination of user and product in the cart
 }
