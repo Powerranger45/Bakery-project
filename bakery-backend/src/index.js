@@ -3,7 +3,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 
-const routes = require('./routes');
+const authRoutes = require('./routes/authRoutes');
+const bakeryRoutes = require('./routes/index');
 
 // Initialize Express app
 const app = express();
@@ -13,13 +14,14 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(bodyParser.json());
 
+// Register routes first
+app.use('/api/auth', authRoutes);  // Authentication routes
+app.use('/api', bakeryRoutes);     // Other routes (products, orders, etc.)
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Bakery API is running' });
 });
-
-// Routes
-app.use('/api', routes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

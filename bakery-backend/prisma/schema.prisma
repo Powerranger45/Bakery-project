@@ -22,6 +22,8 @@ model Product {
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
+  password  String
+  role      String   @default("customer")
   name      String?
   orders    Order[]
   createdAt DateTime @default(now())
