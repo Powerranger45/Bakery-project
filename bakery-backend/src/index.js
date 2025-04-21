@@ -1,33 +1,45 @@
 const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
+const morgan = require('morgan');
+const bakeryRouter = require('./routes/index.js');
+const bakeryService = require('./services/bakeryService');
 require('dotenv').config();
 
-const bakeryRoutes = require('./routes/index');
+async function startServer() {
+  try {
+    // Wait for RabbitMQ connection to be established
+    await bakeryService.connectPromise;
 
-// Initialize Express app
-const app = express();
-const PORT = process.env.PORT || 3001;
+    const app = express();
 
-// Middleware
-app.use(cors());
-app.use(bodyParser.json());
+    // Middleware setup
+    app.use(express.json());
+    app.use(morgan('dev'));
 
-// Register routes first
-app.use('/api', bakeryRoutes);     // Other routes (products, orders, etc.)
+    // Register routes
+    app.use('/api', bakeryRouter);  // Other routes (products, orders, etc.)
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', message: 'Bakery API is running' });
-});
+    // Health check endpoint
+    app.get('/health', (req, res) => {
+      res.status(200).json({ status: 'OK', message: 'Bakery API is running' });
+    });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({ error: 'Internal server error' });
-});
+    // Error handling middleware
+    app.use((err, req, res, next) => {
+      console.error('Global error:', err.stack);
+      res.status(500).json({ error: 'Internal Server Error' });
+    });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+    // Start the server
+    const PORT = process.env.PORT || 3001;
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+
+  } catch (error) {
+    console.error('Startup failed:', error);
+    process.exit(1); // Exit the process if RabbitMQ connection fails
+  }
+}
+
+// Initialize server startup
+startServer();

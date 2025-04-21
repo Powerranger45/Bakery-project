@@ -1,21 +1,11 @@
-const prisma = require('../utils/prisma');
 const amqp = require('amqplib');
+const prisma = require('../utils/prisma');
+require('dotenv').config();
+
+const MAX_RETRIES = 15; // Increased retry attempts for better resilience
+const RETRY_DELAY = 5000; // Delay between retries in milliseconds
 
 let channel;
-
-// RabbitMQ connection
-async function connectRabbitMQ() {
-  try {
-    const connection = await amqp.connect(process.env.RABBITMQ_URL);
-    channel = await connection.createChannel();
-    await channel.assertQueue('order-processing', { durable: true });
-    console.log('Connected to RabbitMQ');
-  } catch (error) {
-    console.error('RabbitMQ connection failed:', error);
-    setTimeout(connectRabbitMQ, 5000);
-  }
-}
-connectRabbitMQ();
 
 const bakeryService = {
   // Product operations (PUBLIC)
@@ -91,7 +81,7 @@ const bakeryService = {
       include: { items: true }
     });
 
-    // Send to RabbitMQ
+    // Send to RabbitMQ for order processing
     if (channel) {
       channel.sendToQueue(
         'order-processing',
@@ -113,20 +103,72 @@ const bakeryService = {
   },
 
   // User operations
-// User operations
-async createUser(userData) {
-  return prisma.user.create({
-    data: {
-      email: userData.email,
-      password: userData.password,
-      isAdmin: userData.isAdmin || false // Explicitly set default to false
-    }
-  });
-},
+  async createUser(userData) {
+    return prisma.user.create({
+      data: {
+        email: userData.email,
+        password: userData.password,
+        isAdmin: userData.isAdmin || false // Explicitly set default to false
+      }
+    });
+  },
+
+  async getUserById(id) {
+    return prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        isAdmin: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+  },
 
   async getUserByEmail(email) {
     return prisma.user.findUnique({ where: { email } });
-  }
+  },
+
+  // Expose channel for external use
+  get channel() {
+    return channel; // Dynamic access of the live channel value
+  },
+
+  // Expose the connection promise to ensure readiness
+  connectPromise: connectRabbitMQ()
 };
 
-module.exports = bakeryService;
+// RabbitMQ connection with retry logic
+async function connectRabbitMQ() {
+  let retries = 0;
+
+  while (retries < MAX_RETRIES) {
+    try {
+      console.log(`Connecting to RabbitMQ... Attempt ${retries + 1}`);
+      const connection = await amqp.connect(process.env.RABBITMQ_URL);
+      channel = await connection.createChannel();
+
+      // Declare queues with durability
+      await channel.assertQueue('user-activity', { durable: true });
+      await channel.assertQueue('order-processing', { durable: true });
+
+      console.log('Connected to RabbitMQ successfully');
+      return;
+    } catch (error) {
+      console.error(`Connection failed: ${error.message}`);
+      retries++;
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+    }
+  }
+
+  throw new Error('Failed to connect to RabbitMQ after multiple attempts.');
+}
+
+// Initial connection attempt
+connectRabbitMQ().catch(error => {
+  console.error('Fatal RabbitMQ connection error:', error);
+  process.exit(1); // Exit process if RabbitMQ connection fails permanently
+});
+
+module.exports = { ...bakeryService };
