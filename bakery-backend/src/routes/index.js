@@ -23,7 +23,7 @@ router.post('/register', bakeryController.register);
 router.post('/login', bakeryController.login);
 router.get('/user', adminAuth, bakeryController.getUser);
 
-bakeryService.connectRabbitMQ().then(() => {
+bakeryService.connectPromise.then(() => {
     console.log('RabbitMQ connection established');
   }).catch((error) => {
     console.error('Failed to connect to RabbitMQ:', error);
