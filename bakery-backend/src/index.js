@@ -14,10 +14,12 @@ async function startServer() {
 
     // Enable CORS middleware with configuration
     app.use(cors({
-      origin: '*', // Allow frontend to access backend
-      methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow these HTTP methods
-      allowedHeaders: ['Content-Type', 'Authorization'], // Allow headers
+      origin: ['http://localhost:3000', 'http://localhost:3001'], // Allow these origins
+      methods: ['GET', 'POST', 'PUT', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true // Optional: If you're using cookies or sessions
     }));
+    
 
     // Middleware setup
     app.use(express.json());
