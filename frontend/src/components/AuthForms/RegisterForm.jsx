@@ -8,10 +8,9 @@ const RegisterForm = () => {
     email: '',
     password: ''
   });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { register } = useContext(AuthContext);
+  const { register, error } = useContext(AuthContext);  // Access error from context
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -23,14 +22,12 @@ const RegisterForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
       await register(formData);
       navigate('/');
     } catch (err) {
-      setError('Failed to register. Please try again.');
       console.error('Registration error:', err);
     } finally {
       setLoading(false);
@@ -44,7 +41,7 @@ const RegisterForm = () => {
           <div className="card">
             <div className="card-header">Register</div>
             <div className="card-body">
-              {error && <div className="alert alert-danger">{error}</div>}
+              {error && <div className="alert alert-danger">{error}</div>} {/* Show error message */}
 
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">

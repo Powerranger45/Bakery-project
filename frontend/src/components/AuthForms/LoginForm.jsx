@@ -7,10 +7,9 @@ const LoginForm = () => {
     email: '',
     password: ''
   });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { login } = useContext(AuthContext);
+  const { login, error } = useContext(AuthContext);  // Get error from context
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -22,14 +21,12 @@ const LoginForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
       await login(formData.email, formData.password);
-      navigate('/');
+      navigate('/home');  // Redirect to home page after successful login
     } catch (err) {
-      setError('Failed to login. Please try again.');
       console.error('Login error:', err);
     } finally {
       setLoading(false);
@@ -43,7 +40,7 @@ const LoginForm = () => {
           <div className="card">
             <div className="card-header">Login</div>
             <div className="card-body">
-              {error && <div className="alert alert-danger">{error}</div>}
+              {error && <div className="alert alert-danger">{error}</div>} {/* Show error from context */}
 
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">

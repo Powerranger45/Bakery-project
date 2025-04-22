@@ -17,9 +17,9 @@ async function startServer() {
       origin: ['http://localhost:3000', 'http://localhost:3001'], // Allow these origins
       methods: ['GET', 'POST', 'PUT', 'DELETE'],
       allowedHeaders: ['Content-Type', 'Authorization'],
-      credentials: true // Optional: If you're using cookies or sessions
+      //credentials: true // Optional: If you're using cookies or sessions
     }));
-    
+
 
     // Middleware setup
     app.use(express.json());

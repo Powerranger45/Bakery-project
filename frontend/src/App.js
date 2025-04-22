@@ -1,5 +1,3 @@
-// src/App.js
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -18,10 +16,9 @@ import './App.css';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();  // This should now work
 
   if (!isAuthenticated) {
-    // Redirect to login if not authenticated
     return <Navigate to="/login" />;
   }
 
@@ -37,7 +34,7 @@ function App() {
           <Navbar />
           <main className="container">
             <Routes>
-              <Route path="/" element={<LandingPage />} />
+              <Route path="/LandingPage" element={<LandingPage />} />
               <Route path="/products" element={<ProductList />} />
               <Route path="/login" element={<LoginForm />} />
               <Route path="/register" element={<RegisterForm />} />
@@ -58,7 +55,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route path="*" element={<Navigate to="/" />} />
+              <Route path="*" element={<Navigate to="/LandingPage" />} />  {/* Corrected fallback route */}
             </Routes>
           </main>
           <footer className="footer">

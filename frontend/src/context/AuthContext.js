@@ -12,6 +12,7 @@ const API_URL = process.env.REACT_APP_API_URL; // Use env variable
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');  // <-- Define error state
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -35,17 +36,22 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async ({ name, email, password }) => {
-    const res = await axios.post(`${API_URL}/register`, {
-      name,
-      email,
-      password
-    });
+    try {
+      const res = await axios.post(`${API_URL}/register`, {
+        name,
+        email,
+        password
+      });
 
-    const { token, user } = res.data;
-    const userData = { ...user, token };
+      const { token, user } = res.data;
+      const userData = { ...user, token };
 
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed');  // <-- Set error message here
+      console.error('Registration error:', err.response?.data || err);
+    }
   };
 
   const logout = () => {
@@ -54,7 +60,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, error }}>
       {children}
     </AuthContext.Provider>
   );
