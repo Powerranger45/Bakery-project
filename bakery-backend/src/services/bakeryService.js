@@ -106,6 +106,7 @@ const bakeryService = {
   async createUser(userData) {
     return prisma.user.create({
       data: {
+        name: userData.name || undefined,
         email: userData.email,
         password: userData.password,
         isAdmin: userData.isAdmin || false // Explicitly set default to false

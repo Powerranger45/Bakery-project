@@ -111,7 +111,7 @@ const bakeryController = {
 
   // Auth controllers
   async register(req, res) {
-    const { email, password, isAdmin = false } = req.body;
+    const { email, password, name, isAdmin = false } = req.body;
 
     try {
       const existingUser = await bakeryService.getUserByEmail(email);
@@ -122,6 +122,7 @@ const bakeryController = {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const newUser = await bakeryService.createUser({
+        name,
         email,
         password: hashedPassword,
         isAdmin, // This is now passed correctly to the service

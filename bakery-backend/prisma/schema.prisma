@@ -9,6 +9,7 @@ datasource db {
 
 model User {
   id        Int         @id @default(autoincrement())
+  name      String?     // Optional field (use "String" without "?" if required)
   email     String      @unique
   password  String
   isAdmin   Boolean     @default(false)

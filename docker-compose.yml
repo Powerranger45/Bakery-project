@@ -62,7 +62,8 @@ services:
       - ./bakery-backend:/app
       - /app/node_modules
     command: >
-      sh -c "npx prisma migrate deploy && npm start"
+      sh -c "npx prisma migrate deploy --schema prisma/schema.prisma && 
+             npm start"
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:3001/health"]
       interval: 10s
