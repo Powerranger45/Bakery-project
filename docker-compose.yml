@@ -27,8 +27,8 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "5672:5672"      # AMQP port
-      - "15672:15672"    # Management UI
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -61,9 +61,6 @@ services:
     volumes:
       - ./bakery-backend:/app
       - /app/node_modules
-    command: >
-      sh -c "npx prisma migrate deploy --schema prisma/schema.prisma && 
-             npm start"
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:3001/health"]
       interval: 10s
@@ -111,7 +108,7 @@ services:
       - ./bakery-backend:/app
       - /app/node_modules
     command: >
-      sh -c "node src/workers/orderProcessor.js"
+      sh -c "npx prisma migrate deploy --schema prisma/schema.prisma && node src/workers/orderProcessor.js"
     healthcheck:
       test: ["CMD", "pgrep", "node"]
       interval: 10s

@@ -111,7 +111,7 @@ const bakeryController = {
 
   // Auth controllers
   async register(req, res) {
-    const { email, password, name, isAdmin = false } = req.body;
+    const { name, email, password, isAdmin = false } = req.body;
 
     try {
       const existingUser = await bakeryService.getUserByEmail(email);
