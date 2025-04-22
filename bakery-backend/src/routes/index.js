@@ -24,10 +24,11 @@ router.post('/login', bakeryController.login);
 router.get('/user', adminAuth, bakeryController.getUser);
 
 bakeryService.connectPromise.then(() => {
-    console.log('RabbitMQ connection established');
-  }).catch((error) => {
-    console.error('Failed to connect to RabbitMQ:', error);
-  });
+  console.log('RabbitMQ connection established');
+}).catch((error) => {
+  console.error('Failed to connect to RabbitMQ:', error);
+});
+
 // Publish route for sending messages to RabbitMQ
 router.post('/publish', async (req, res) => {
     try {

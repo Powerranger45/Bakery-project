@@ -165,10 +165,6 @@ async function connectRabbitMQ() {
   throw new Error('Failed to connect to RabbitMQ after multiple attempts.');
 }
 
-// Initial connection attempt
-connectRabbitMQ().catch(error => {
-  console.error('Fatal RabbitMQ connection error:', error);
-  process.exit(1); // Exit process if RabbitMQ connection fails permanently
-});
+// Removed redundant connection attempt — handled via connectPromise
 
 module.exports = { ...bakeryService };

@@ -1,5 +1,5 @@
 const amqp = require('amqplib');
-const prisma = require('./utils/prisma');
+const prisma = require('../utils/prisma');
 require('dotenv').config();
 
 const MAX_RETRIES = 15; // Maximum number of retries to connect to RabbitMQ

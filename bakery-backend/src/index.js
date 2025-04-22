@@ -1,5 +1,6 @@
 const express = require('express');
 const morgan = require('morgan');
+const cors = require('cors'); // Import CORS
 const bakeryRouter = require('./routes/index.js');
 const bakeryService = require('./services/bakeryService');
 require('dotenv').config();
@@ -10,6 +11,13 @@ async function startServer() {
     await bakeryService.connectPromise;
 
     const app = express();
+
+    // Enable CORS middleware with configuration
+    app.use(cors({
+      origin: '*', // Allow frontend to access backend
+      methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow these HTTP methods
+      allowedHeaders: ['Content-Type', 'Authorization'], // Allow headers
+    }));
 
     // Middleware setup
     app.use(express.json());
