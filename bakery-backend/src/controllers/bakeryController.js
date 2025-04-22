@@ -111,7 +111,12 @@ const bakeryController = {
 
   // Auth controllers
   async register(req, res) {
-    const { email, password, isAdmin = false } = req.body;
+    const { name, email, password, isAdmin = false } = req.body;
+
+    // Validation
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email, and password are required' });
+    }
 
     try {
       const existingUser = await bakeryService.getUserByEmail(email);
@@ -122,9 +127,10 @@ const bakeryController = {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const newUser = await bakeryService.createUser({
+        name, // <-- Include name here
         email,
         password: hashedPassword,
-        isAdmin, // This is now passed correctly to the service
+        isAdmin,
       });
 
       const token = jwt.sign(
@@ -138,7 +144,8 @@ const bakeryController = {
       res.status(500).json({ message: 'Registration failed', error: error.message });
     }
   },
-  async getUser(req, res) {
+
+async getUser(req, res) {
     try {
       const user = await bakeryService.getUserById(req.user.id); // user is set by adminAuth middleware
       if (!user) return res.status(404).json({ error: 'User not found' });
